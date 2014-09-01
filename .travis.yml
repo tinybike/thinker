@@ -5,6 +5,6 @@ language: cpp
 notifications:
   email: false
 script: make
-os:
-  - linux
-  - osx
+after_success:
+ - sudo apt-get -qq install valgrind
+ - valgrind --leak-check=full --show-reachable=yes ./thinker
