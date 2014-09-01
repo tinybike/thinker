@@ -1,0 +1,10 @@
+compiler:
+  - gcc
+  - clang
+language: cpp
+notifications:
+  email: false
+script: make
+os:
+  - linux
+  - osx
