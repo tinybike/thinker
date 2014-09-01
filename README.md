@@ -14,10 +14,12 @@ To install:
 
 To run:
 
-    $ ./neuralnet
+    $ ./thinker -v
+
+The `-v` flag causes `thinker` to output to the console.  If no flag is included, it will run silently.
 
 To uninstall:
 
     $ make clean
 
-By default, `neuralnet` is learning a simple XOR logic.  This is stored as `GOAL` in `neuralnet.cpp`.  You can edit this simply by changing the numbers in the `GOAL` variable, and re-compiling.  You can also set the number of layers, and number of neurons per layer, to be any size.
+By default, `thinker` is learning a simple XOR logic.  This is stored as `GOAL` in `thinker.cpp`.  You can edit this simply by changing the numbers in the `GOAL` variable, and re-compiling.  You can also set the number of layers, and number of neurons per layer, to be any size.

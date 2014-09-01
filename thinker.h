@@ -1,5 +1,5 @@
-#ifndef __NEURALNET_H_INCLUDED__
-#define __NEURALNET_H_INCLUDED__
+#ifndef __THINKER_H_INCLUDED__
+#define __THINKER_H_INCLUDED__
 
 #include <iostream>
 #include <cmath>
@@ -7,7 +7,7 @@
 #include <time.h>
 #include "mtrand.h"
 
-namespace NeuralNet {
+namespace Thinker {
 
 extern const int MAX_CYCLES;
 extern const int NUMBER_OF_LAYERS;
@@ -41,7 +41,7 @@ bool complete();
 
 } // namespace
 
-extern std::vector<NeuralNet::Neuron> layers;
-extern std::vector<std::vector<NeuralNet::Neuron> > network;
+extern std::vector<Thinker::Neuron> layers;
+extern std::vector<std::vector<Thinker::Neuron> > network;
 
 #endif

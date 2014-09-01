@@ -1,5 +1,5 @@
 /*********************************************************************
- * neuralnet.cpp                                                     *
+ * Thinker                                                           *
  *                                                                   *
  * Logistic function neural network (compile with Mersenne-Twister   *
  * random number generator)                                          *
@@ -7,9 +7,9 @@
  * (c) Jack Peterson, 9/9/2008                                       *
  *********************************************************************/
 
-#include "neuralnet.h"
+#include "thinker.h"
 
-namespace NeuralNet {
+namespace Thinker {
 
 const int MAX_CYCLES = 100000;
 const int NUMBER_OF_LAYERS = 3;
@@ -144,71 +144,68 @@ bool complete()
 
 ///////////////// Network declaration and sizing /////////////////
 
-std::vector<NeuralNet::Neuron> layers(NeuralNet::NUMBER_OF_LAYERS);
-std::vector<std::vector<NeuralNet::Neuron> >
-    network(NeuralNet::NEURONS_PER_LAYER + 1, layers);
+std::vector<Thinker::Neuron> layers(Thinker::NUMBER_OF_LAYERS);
+std::vector<std::vector<Thinker::Neuron> >
+    network(Thinker::NEURONS_PER_LAYER + 1, layers);
 
 //////////////////////////////////////////////////////////////////
 
-int main()
+int main(int argc, char* argv[])
 {
     bool result = false;
 
+    // Hide output unless -v (verbose) flag is passed
+    std::streambuf * buffer;
+    buffer = std::cout.rdbuf(0);
+    if (argc == 2 && std::string(argv[1]) == "-v") std::cout.rdbuf(buffer);
+
     // Initialize the network
-    for (int i = 0; i < NeuralNet::NUMBER_OF_LAYERS; i++)
+    for (int i = 0; i < Thinker::NUMBER_OF_LAYERS; i++)
     {
-        for (int j = 0; j <= NeuralNet::NEURONS_PER_LAYER; j++)
-            network[j][i].initialize(i, NeuralNet::NEURONS_PER_LAYER, 0.25);
+        for (int j = 0; j <= Thinker::NEURONS_PER_LAYER; j++)
+        {
+            network[j][i].initialize(i, Thinker::NEURONS_PER_LAYER, 0.25);
+        }
     }
     std::cout << std::endl;
 
     // Train the network
-    std::cout << "Goal: [ ";
-    for (int j = 0; j < 4; j++)
-    {
-        std::cout << NeuralNet::GOAL[j] << " ";
-    }
-    std::cout << "]\nLayer " << NeuralNet::NUMBER_OF_LAYERS - 1 << " output:\n";
-    for (int i = 0; i < NeuralNet::MAX_CYCLES; i++)
+    for (int i = 0; i < Thinker::MAX_CYCLES; i++)
     {   
-        // Forward pass: layer 0 -> (NeuralNet::NUMBER_OF_LAYERS - 1)
+        // Forward pass: layer 0 -> (Thinker::NUMBER_OF_LAYERS - 1)
         for (int j = 0; j < 4; j++)
         {
-            for (int l = 0; l < NeuralNet::NUMBER_OF_LAYERS; l++)
+            for (int l = 0; l < Thinker::NUMBER_OF_LAYERS; l++)
             {
-                for (int m = 0; m <= NeuralNet::NEURONS_PER_LAYER; m++)
+                for (int m = 0; m <= Thinker::NEURONS_PER_LAYER; m++)
                     network[m][l].forward(j);
             }
         }
         
-        // Reverse pass: layer (NeuralNet::NUMBER_OF_LAYERS - 1) -> 0
+        // Reverse pass: layer (Thinker::NUMBER_OF_LAYERS - 1) -> 0
         for (int j = 0; j < 4; j++)
         {
-            for (int l = NeuralNet::NUMBER_OF_LAYERS - 1; l >= 0; l--)
+            for (int l = Thinker::NUMBER_OF_LAYERS - 1; l >= 0; l--)
             {
-                for (int m = NeuralNet::NEURONS_PER_LAYER; m >= 0; m--)
+                for (int m = Thinker::NEURONS_PER_LAYER; m >= 0; m--)
                     network[m][l].updateDeltas(j);
             }
         }
         for (int j = 0; j < 4; j++)
         {
-            for (int l = NeuralNet::NUMBER_OF_LAYERS - 1; l >= 0; l--)
+            for (int l = Thinker::NUMBER_OF_LAYERS - 1; l >= 0; l--)
             {
-                for (int m = NeuralNet::NEURONS_PER_LAYER; m >= 0; m--)
+                for (int m = Thinker::NEURONS_PER_LAYER; m >= 0; m--)
                     network[m][l].updateWeights(j);
             }
         }
         
-        // Display the network's output, and check if it is complete
-        std::cout << "[ ";
-        for (int j = 0; j < 4; j++)
-            std::cout << network[0][NeuralNet::NUMBER_OF_LAYERS - 1].getOutput(j) << " ";
-        result = NeuralNet::complete();
-        std::cout << "]\n";
+        // Check if it is complete
+        result = Thinker::complete();
         if (result)
         {
             std::cout << "\n**** Training successful after " << i << " cycles! ****\n";
-            i = NeuralNet::MAX_CYCLES;
+            i = Thinker::MAX_CYCLES;
         }
     }
 
@@ -218,14 +215,14 @@ int main()
     std::cout << "Goal: [ ";
     for (int j = 0; j < 4; j++)
     {
-        std::cout << NeuralNet::GOAL[j] << " ";
+        std::cout << Thinker::GOAL[j] << " ";
     }
     std::cout << "]\n";
 
     std::cout << "Final network weights:\n";
-    for (int j = 0; j < NeuralNet::NUMBER_OF_LAYERS; j++)
+    for (int j = 0; j < Thinker::NUMBER_OF_LAYERS; j++)
     {
-        for (int k = 0; k < NeuralNet::NEURONS_PER_LAYER; k++)
+        for (int k = 0; k < Thinker::NEURONS_PER_LAYER; k++)
         {
             std::cout << "Layer " << j << ": [ ";
             for (int l = 0; l < network[k][j].getNumInputs(); l++)
