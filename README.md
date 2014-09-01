@@ -1,5 +1,7 @@
 ## Thinker
 
+[![Build Status](https://travis-ci.org/tensorjack/thinker.svg?branch=master)](https://travis-ci.org/tensorjack/thinker)
+
 Thinker is a [logistic-function neural network](http://en.wikipedia.org/wiki/Logistic_function#Neural_networks).
 
 I originally built this to be used in conjunction with the [Ribosome Binding Site (RBS) Calculator](http://www.sciencedirect.com/science/article/pii/B9780123851208000024).  A free-to-use web version of the RBS Calculator can be found on the Salis lab's [website](https://salis.psu.edu/software/).  The goal of this project was to map the DNA sequences of ribosome binding sites to their binding free energies.
