@@ -45,17 +45,17 @@ void NeuralNetwork::innervate()
         }
     }
 
-    // Build delta matrices
+    // Build feedback matrices
     for (int i = 0; i < n_inputs; i++) {
-        hidden_back.push_back(nerve());
+        hidden_feedback.push_back(nerve());
         for (int j = 0; j < n_hidden; j++) {
-            hidden_back[i].push_back(0.0);
+            hidden_feedback[i].push_back(0.0);
         }
     }
     for (int i = 0; i < n_hidden; i++) {
-        output_back.push_back(nerve());
+        output_feedback.push_back(nerve());
         for (int j = 0; j < n_outputs; j++) {
-            output_back[i].push_back(0.0);
+            output_feedback[i].push_back(0.0);
         }
     }
 }
@@ -95,43 +95,43 @@ double NeuralNetwork::backpropagate(const nerve& target,
 {
     double error;
     double sigmoid;
-    double backprop_weight;
+    double feedback_weight;
     double RMSE; // root mean squared error
-    nerve output_back_updated;
-    nerve hidden_back_updated;
+    nerve output_feedback_updated;
+    nerve hidden_feedback_updated;
 
-    // Calculate updated output backprop-deltas
+    // Calculate updated output feedback vector
     for (int i = 0; i < n_outputs; i++) {
         error = rzero(target[i] - output_layer[i]);
         sigmoid = logistic(output_layer[i]);
-        output_back_updated.push_back(rzero(error * sigmoid * (1.0 - sigmoid)));
+        output_feedback_updated.push_back(rzero(error * sigmoid * (1.0 - sigmoid)));
     }
 
-    // Calculate updated hidden backprop-deltas
+    // Calculate updated hidden feedback vector
     for (int i = 0; i < n_hidden; i++) {
         error = 0.0;
         for (int j = 0; j < n_outputs; j++) {
-            error += rzero(output_back_updated[j] * output_weights[i][j]);
+            error += rzero(output_feedback_updated[j] * output_weights[i][j]);
         }
         sigmoid = logistic(hidden_layer[i]);
-        hidden_back_updated.push_back(rzero(error * sigmoid * (1.0 - sigmoid)));
+        hidden_feedback_updated.push_back(rzero(error * sigmoid * (1.0 - sigmoid)));
     }
 
     // Update the hidden-to-output weights
     for (int i = 0; i < n_hidden; i++) {
         for (int j = 0; j < n_outputs; j++) {
-            backprop_weight = rzero(output_back_updated[j] * hidden_layer[i]);
-            output_weights[i][j] += rzero(learning_rate * backprop_weight);
-            output_back[i][j] = backprop_weight;
+            feedback_weight = rzero(output_feedback_updated[j] * hidden_layer[i]);
+            output_weights[i][j] += rzero(learning_rate * feedback_weight);
+            output_feedback[i][j] = feedback_weight;
         }
     }
 
     // Update the input-to-hidden weights
     for (int i = 0; i < n_inputs; i++) {
         for (int j = 0; j < n_hidden; j++) {
-            backprop_weight = hidden_back_updated[j] * input_layer[i];
-            input_weights[i][j] += rzero(learning_rate * backprop_weight);
-            hidden_back[i][j] = backprop_weight;
+            feedback_weight = hidden_feedback_updated[j] * input_layer[i];
+            input_weights[i][j] += rzero(learning_rate * feedback_weight);
+            hidden_feedback[i][j] = feedback_weight;
         }
     }
 
@@ -206,9 +206,9 @@ void NeuralNetwork::print_weights() const
     DEBUG("\nHidden-to-output weights:");
     print(output_weights);
     DEBUG("\nInput-to-hidden deltas:");
-    print(hidden_back);
+    print(hidden_feedback);
     DEBUG("\nHidden-to-output deltas:");
-    print(output_back);
+    print(output_feedback);
 }
 
 void NeuralNetwork::print(const nerve& n) const
@@ -247,9 +247,9 @@ double rzero(const double x)
 
 int main()
 {
-    const int INPUT_NODES = 10;
-    const int HIDDEN_NODES = 5;
-    const int OUTPUT_NODES = 10;
+    const int INPUT_NODES = 7;
+    const int HIDDEN_NODES = 4;
+    const int OUTPUT_NODES = 7;
 
     // Create and initialize the neural network
     Thinker::NeuralNetwork neural_network(INPUT_NODES, HIDDEN_NODES, OUTPUT_NODES);

@@ -32,10 +32,10 @@ private:
     nerve input_layer;
     nerve hidden_layer;
     nerve output_layer;
-    synapse input_weights;  // forward: input -> hidden
-    synapse output_weights; // forward: hidden -> output
-    synapse hidden_back;    // backward: hidden -> input
-    synapse output_back;    // backward: output -> hidden
+    synapse input_weights;      // forward: input -> hidden
+    synapse output_weights;     // forward: hidden -> output
+    synapse hidden_feedback;    // backward: hidden -> input
+    synapse output_feedback;    // backward: output -> hidden
 public:
     /** Create the neural net, and initialize its three layers. */
     NeuralNetwork(const int n_inputs, const int n_hidden, const int n_outputs);
