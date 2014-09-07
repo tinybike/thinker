@@ -1,47 +1,67 @@
 #ifndef __THINKER_H_INCLUDED__
 #define __THINKER_H_INCLUDED__
 
-#include <iostream>
+#include <cstdio>
+#include <ctime>
 #include <cmath>
 #include <vector>
-#include <time.h>
+#include <limits>
 #include "mtrand.h"
+#include "test.h"
+
+#ifdef NDEBUG
+#define DEBUG(format, args...) ((void)0)
+#else
+#define DEBUG printf
+#endif
 
 namespace Thinker {
 
-extern const int MAX_CYCLES;
-extern const int NUMBER_OF_LAYERS;
-extern const int NEURONS_PER_LAYER;
-extern const double GOAL[4];
+static const double EPSILON = std::numeric_limits<double>::epsilon();
 
-extern double INPUT_LIST[4][2];
+typedef std::vector<double> nerve;
+typedef std::vector<std::vector<double> > synapse;
 
-class Neuron
+/** Three-layer feed-forward neural network with backpropagation */
+class NeuralNetwork
 {
 private:
-    std::vector<std::vector<double> > input;
-    double * output, * grad, * weight;
-    double lRate;
-    int numInputs, numSets, layer;
+    int n_inputs;
+    int n_hidden;
+    int n_outputs;
+    nerve input_layer;
+    nerve hidden_layer;
+    nerve output_layer;
+    synapse input_weights;  // forward: input -> hidden
+    synapse output_weights; // forward: hidden -> output
+    synapse hidden_back;    // backward: hidden -> input
+    synapse output_back;    // backward: output -> hidden
 public:
-    Neuron() { }
-    void initialize(int, int, double);
-    void forward(int);
-    void updateDeltas(int);
-    void updateWeights(int);
-    double sigmoid(double);
-    int getNumInputs();
-    int getNumSets();
-    double getOutput(int);
-    double getGrad(int);
-    double getWeight(int);
+    /** Create the neural net, and initialize its three layers. */
+    NeuralNetwork(const int n_inputs, const int n_hidden, const int n_outputs);
+    /** Set up the interlayer weight matrices. */
+    void innervate();
+    /** Forward pass: neural net filters the input pattern. */
+    nerve feedforward(const nerve& pattern);
+    /** Reverse pass: neural net is trained on the target pattern. */
+    double backpropagate(const nerve& target, const double learning_rate);
+    /** Train the neural net to map input_grid to output_grid. */
+    void train(const synapse& input_grid, const synapse& output_grid,
+               const int num_iterations, const double learning_rate);
+    /** Post-training forward pass. */
+    void test(const synapse& input_grid, const synapse& output_grid);
+    void print_layers() const;
+    void print_weights() const;
+    void print(const nerve&) const;
+    void print(const synapse&) const;
 };
 
-bool complete();
+/** Round negligibly small values to zero */
+double logistic(const double);
+
+/** Logistic transfer function */
+double rzero(const double);
 
 } // namespace
-
-extern std::vector<Thinker::Neuron> layers;
-extern std::vector<std::vector<Thinker::Neuron> > network;
 
 #endif

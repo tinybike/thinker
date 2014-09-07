@@ -1,238 +1,258 @@
 /*********************************************************************
  * Thinker                                                           *
  *                                                                   *
- * Logistic function neural network (compile with Mersenne-Twister   *
- * random number generator)                                          *
+ * Logistic-function neural network with backpropagation.            *
  *                                                                   *
  * (c) Jack Peterson, 9/9/2008                                       *
  *********************************************************************/
 
 #include "thinker.h"
+#include "test.h"
 
 namespace Thinker {
 
-const int MAX_CYCLES = 100000;
-const int NUMBER_OF_LAYERS = 3;
-const int NEURONS_PER_LAYER = 4;
+MTRand_open rand((unsigned)time(0));
 
-const double GOAL[4] = {0.0, 1.0, 1.0, 0.0};
-
-double INPUT_LIST[4][2] = {{0.0, 0.0},
-                           {1.0, 0.0},
-                           {0.0, 1.0},
-                           {1.0, 1.0}};
-
-// Seed random number generator with system time
-MTRand_open mt((unsigned)time(0));
-
-// Neuron setup
-void Neuron::initialize(int L, int N, double R)
+NeuralNetwork::NeuralNetwork(const int n_inputs,
+                             const int n_hidden,
+                             const int n_outputs)
+    : n_inputs(n_inputs + 1)
+    , n_hidden(n_hidden)
+    , n_outputs(n_outputs)
 {
-    layer = L;
-    numInputs = N + 1;
-    numSets = 4;
-    lRate = R;
+    // Initialize each neural layer
+    input_layer.assign(n_inputs, 0.0);
+    hidden_layer.assign(n_hidden, 0.0);
+    output_layer.assign(n_outputs, 0.0);
 
-    // Initialize a numSets x numInputs vector of zeros for input
-    std::vector<double> numPerSet(numInputs);
-    output = new double[numSets];
-    grad = new double[numSets];
-    for (int i = 0; i < numSets; i++)
-    {
-        output[i] = 0.0;
-        grad[i] = 0.0;
-        input.push_back(numPerSet);
-
-        // Insert static threshold (bias) of -1.0
-        input[i][numInputs - 1] = -1.0;
-    }
-
-    // Initialize weight to random values on (-1, 1)
-    weight = new double[numInputs];
-    std::cout << "++ Layer " << layer << " neuron: [ ";
-    for (int i = 0; i < numInputs; i++)
-    {
-        weight[i] = (2 * (mt() - 0.5));
-        std::cout << weight[i] << " ";
-    }
-    std::cout << "] ++\n";
+    // Add a bias term to the input layer
+    input_layer.push_back(1.0);
 }
 
-double Neuron::sigmoid(double x) { return 1.0 / (1.0 + exp(-x)); }
-
-int Neuron::getNumInputs() { return numInputs; }
-
-int Neuron::getNumSets() { return numSets; }
-
-double Neuron::getOutput(int i) { return output[i]; }
-
-double Neuron::getGrad(int i) { return grad[i]; }
-
-double Neuron::getWeight(int i) { return weight[i]; }
-
-void Neuron::forward(int inputSet)
+void NeuralNetwork::innervate()
 {
-    switch (layer)
-    {
-        case 0:
-        {
-            double (* pTemp)[2];
-            pTemp = INPUT_LIST;
-            for (int i = 0; i < numInputs - 1; i++)
-                input[inputSet][i] = pTemp[inputSet][i];
-            break;
-        }
-        default:
-        {
-            // Use the previous layer's output as this layer's input
-            for (int i = 0; i < numInputs - 1; i++)
-                input[inputSet][i] = network[i][layer - 1].getOutput(inputSet);
-            break;
+    // Build weight matrices
+    for (int i = 0; i < n_inputs; i++) {
+        input_weights.push_back(nerve());
+        for (int j = 0; j < n_hidden; j++) {
+            input_weights[i].push_back(rzero(2.0*rand() - 1.0));
         }
     }
-    // Calculate the neuron's output from the weighted inputs
-    double product = 0.0;
-    for (int i = 0; i < numInputs; i++)
-        product += weight[i] * input[inputSet][i];
-    output[inputSet] = sigmoid(product);
+    for (int i = 0; i < n_hidden; i++) {
+        output_weights.push_back(nerve());
+        for (int j = 0; j < n_outputs; j++) {
+            output_weights[i].push_back(rzero(2.0*rand() - 1.0));
+        }
+    }
+
+    // Build delta matrices
+    for (int i = 0; i < n_inputs; i++) {
+        hidden_back.push_back(nerve());
+        for (int j = 0; j < n_hidden; j++) {
+            hidden_back[i].push_back(0.0);
+        }
+    }
+    for (int i = 0; i < n_hidden; i++) {
+        output_back.push_back(nerve());
+        for (int j = 0; j < n_outputs; j++) {
+            output_back[i].push_back(0.0);
+        }
+    }
 }
 
-void Neuron::updateDeltas(int inputSet)
+nerve NeuralNetwork::feedforward(const nerve& pattern)
+{
+    double weighted_sum;
+    
+    // Update input nodes (except bias term)
+    for (int i = 0; i < n_inputs - 1; i++) {
+        input_layer[i] = pattern[i];
+    }
+
+    // Update hidden nodes
+    for (int i = 0; i < n_hidden; i++) {
+        weighted_sum = 0.0;
+        for (int j = 0; j < n_inputs; j++) {
+            weighted_sum += input_layer[j] * input_weights[j][i];
+        }
+        hidden_layer[i] = logistic(weighted_sum);
+    }
+
+    // Update output nodes
+    for (int i = 0; i < n_outputs; i++) {
+        weighted_sum = 0.0;
+        for (int j = 0; j < n_hidden; j++) {
+            weighted_sum += hidden_layer[j] * output_weights[j][i];
+        }
+        output_layer[i] = logistic(weighted_sum);
+    }
+
+    return output_layer;
+}
+
+double NeuralNetwork::backpropagate(const nerve& target,
+                                    const double learning_rate)
 {
     double error;
-    switch (layer)
-    {
-        case NUMBER_OF_LAYERS - 1:
-        {
-            // Calculate how far off the output is from the goal, and
-            // adjust the hidden-to-output weights
-            error = GOAL[inputSet] - output[inputSet];
-            grad[inputSet] = error * output[inputSet] * (1 - output[inputSet]);
-            break;
+    double sigmoid;
+    double backprop_weight;
+    double RMSE; // root mean squared error
+    nerve output_back_updated;
+    nerve hidden_back_updated;
+
+    // Calculate updated output backprop-deltas
+    for (int i = 0; i < n_outputs; i++) {
+        error = rzero(target[i] - output_layer[i]);
+        sigmoid = logistic(output_layer[i]);
+        output_back_updated.push_back(rzero(error * sigmoid * (1.0 - sigmoid)));
+    }
+
+    // Calculate updated hidden backprop-deltas
+    for (int i = 0; i < n_hidden; i++) {
+        error = 0.0;
+        for (int j = 0; j < n_outputs; j++) {
+            error += rzero(output_back_updated[j] * output_weights[i][j]);
         }
-        default:
-        {
-            // Backpropagate the error and adjust the previous-to-current
-            // layer weights based on the gradients of the next layer
-            error = 0.0;
-            for (int i = 0; i < network[0][layer + 1].getNumInputs(); i++)
-                error += network[i][layer + 1].getWeight(i) * network[i][layer + 1].getGrad(inputSet);
-            grad[inputSet] = error * output[inputSet] * (1 - output[inputSet]);
-            break;
+        sigmoid = logistic(hidden_layer[i]);
+        hidden_back_updated.push_back(rzero(error * sigmoid * (1.0 - sigmoid)));
+    }
+
+    // Update the hidden-to-output weights
+    for (int i = 0; i < n_hidden; i++) {
+        for (int j = 0; j < n_outputs; j++) {
+            backprop_weight = rzero(output_back_updated[j] * hidden_layer[i]);
+            output_weights[i][j] += rzero(learning_rate * backprop_weight);
+            output_back[i][j] = backprop_weight;
         }
     }
-}
 
-void Neuron::updateWeights(int inputSet)
-{
-    for (int i = 0; i < numInputs; i++)
-        weight[i] += lRate * grad[inputSet] * input[inputSet][i];
-}
-
-bool complete()
-{
-    // Check if the network output is sufficiently close to the goal
-    for (int i = 0; i < 4; i++)
-    {
-        if (fabs(GOAL[i] - network[0][NUMBER_OF_LAYERS - 1].getOutput(i)) > 0.01) 
-            return false;
+    // Update the input-to-hidden weights
+    for (int i = 0; i < n_inputs; i++) {
+        for (int j = 0; j < n_hidden; j++) {
+            backprop_weight = hidden_back_updated[j] * input_layer[i];
+            input_weights[i][j] += rzero(learning_rate * backprop_weight);
+            hidden_back[i][j] = backprop_weight;
+        }
     }
-    return true;
+
+    // Root mean squared error (RMSE) between desired and actual output
+    RMSE = 0.0;
+    for (int i = 0; i < n_outputs; i++) {
+        RMSE += std::sqrt(std::pow(target[i] - output_layer[i], 2));
+    }
+
+    return RMSE / n_outputs;
+}
+
+void NeuralNetwork::train(const synapse& input_grid,
+                          const synapse& output_grid,
+                          const int num_iterations,
+                          const double learning_rate)
+{
+    double error;
+
+    DEBUG("Training: %d iterations, %f learning rate\n",
+          num_iterations, learning_rate);
+    for (int i = 0; i < num_iterations; i++) {
+        error = 0.0;
+        for (unsigned j = 0; j < input_grid.size(); j++) {
+            feedforward(input_grid[j]);
+            error += backpropagate(output_grid[j], learning_rate);
+        }
+        if (i == 0) {
+            DEBUG("Error [%d]: %f\n", i, error);
+        }
+    }
+    DEBUG("Final error: %f\n", error);
+    DEBUG("Training complete!\n");
+}
+
+void NeuralNetwork::test(const synapse& input_grid, const synapse& output_grid)
+{
+    nerve result;
+
+    DEBUG("\nTesting [input --> output]:\n");
+    for (unsigned i = 0; i < input_grid.size(); i++) {
+
+        result = feedforward(input_grid[i]);
+        
+        for (unsigned j = 0; j < input_grid[i].size(); j++) {
+            DEBUG("%f ", input_grid[i][j]);
+        }
+        DEBUG("--> ");
+        for (unsigned j = 0; j < output_grid[i].size(); j++) {
+            DEBUG("%f ", result[j]);
+        }
+        DEBUG("\n");
+    }
+    print_layers();
+}
+
+void NeuralNetwork::print_layers() const {
+    DEBUG("\nInputs [%d nodes]: ", n_inputs);
+    print(input_layer);
+    DEBUG("Hidden [%d nodes]: ", n_hidden);
+    print(hidden_layer);
+    DEBUG("Output [%d nodes]: ", n_outputs);
+    print(output_layer);
+    DEBUG("\n");
+}
+
+void NeuralNetwork::print_weights() const {
+    DEBUG("\nInput-to-hidden weights:");
+    print(input_weights);
+    DEBUG("\nHidden-to-output weights:");
+    print(output_weights);
+    DEBUG("\nInput-to-hidden deltas:");
+    print(hidden_back);
+    DEBUG("\nHidden-to-output deltas:");
+    print(output_back);
+}
+
+void NeuralNetwork::print(const nerve& n) const {
+    for (unsigned i = 0; i < n.size(); i++) {
+        DEBUG("%f ", n[i]);
+    }
+    DEBUG("\n");
+}
+
+void NeuralNetwork::print(const synapse& s) const {
+    for (unsigned i = 0; i < s.size(); i++) {
+        for (unsigned j = 0; j < s[i].size(); j++) {
+            DEBUG("%f ", s[i][j]);
+        }
+        DEBUG("\n");
+    }
+    DEBUG("\n");
+}
+
+double rzero(double x)
+{
+    if (x < EPSILON && x > -EPSILON) {
+        return 0.0;
+    }
+    return x;
+}
+
+double logistic(double x)
+{
+    return rzero(1.0 / (1.0 + exp(-x)));
 }
 
 } // namespace
 
-///////////////// Network declaration and sizing /////////////////
-
-std::vector<Thinker::Neuron> layers(Thinker::NUMBER_OF_LAYERS);
-std::vector<std::vector<Thinker::Neuron> >
-    network(Thinker::NEURONS_PER_LAYER + 1, layers);
-
-//////////////////////////////////////////////////////////////////
-
-int main(int argc, char* argv[])
+int main()
 {
-    bool result = false;
+    const int INPUT_NODES = 10;
+    const int HIDDEN_NODES = 5;
+    const int OUTPUT_NODES = 10;
 
-    // Hide output unless -v (verbose) flag is passed
-    std::streambuf * buffer;
-    buffer = std::cout.rdbuf(0);
-    if (argc == 2 && std::string(argv[1]) == "-v") std::cout.rdbuf(buffer);
+    // Create and initialize the neural network
+    Thinker::NeuralNetwork neural_network(INPUT_NODES, HIDDEN_NODES, OUTPUT_NODES);
+    neural_network.innervate();
 
-    // Initialize the network
-    for (int i = 0; i < Thinker::NUMBER_OF_LAYERS; i++)
-    {
-        for (int j = 0; j <= Thinker::NEURONS_PER_LAYER; j++)
-        {
-            network[j][i].initialize(i, Thinker::NEURONS_PER_LAYER, 0.25);
-        }
-    }
-    std::cout << std::endl;
+    // Test drive the network
+    Thinker::identity_matrix(neural_network, INPUT_NODES, OUTPUT_NODES);
 
-    // Train the network
-    for (int i = 0; i < Thinker::MAX_CYCLES; i++)
-    {   
-        // Forward pass: layer 0 -> (Thinker::NUMBER_OF_LAYERS - 1)
-        for (int j = 0; j < 4; j++)
-        {
-            for (int l = 0; l < Thinker::NUMBER_OF_LAYERS; l++)
-            {
-                for (int m = 0; m <= Thinker::NEURONS_PER_LAYER; m++)
-                    network[m][l].forward(j);
-            }
-        }
-        
-        // Reverse pass: layer (Thinker::NUMBER_OF_LAYERS - 1) -> 0
-        for (int j = 0; j < 4; j++)
-        {
-            for (int l = Thinker::NUMBER_OF_LAYERS - 1; l >= 0; l--)
-            {
-                for (int m = Thinker::NEURONS_PER_LAYER; m >= 0; m--)
-                    network[m][l].updateDeltas(j);
-            }
-        }
-        for (int j = 0; j < 4; j++)
-        {
-            for (int l = Thinker::NUMBER_OF_LAYERS - 1; l >= 0; l--)
-            {
-                for (int m = Thinker::NEURONS_PER_LAYER; m >= 0; m--)
-                    network[m][l].updateWeights(j);
-            }
-        }
-        
-        // Check if it is complete
-        result = Thinker::complete();
-        if (result)
-        {
-            std::cout << "\n**** Training successful after " << i << " cycles! ****\n";
-            i = Thinker::MAX_CYCLES;
-        }
-    }
-
-    if (!result)
-        std::cout << "\n**** Training failed. ****\n";
-
-    std::cout << "Goal: [ ";
-    for (int j = 0; j < 4; j++)
-    {
-        std::cout << Thinker::GOAL[j] << " ";
-    }
-    std::cout << "]\n";
-
-    std::cout << "Final network weights:\n";
-    for (int j = 0; j < Thinker::NUMBER_OF_LAYERS; j++)
-    {
-        for (int k = 0; k < Thinker::NEURONS_PER_LAYER; k++)
-        {
-            std::cout << "Layer " << j << ": [ ";
-            for (int l = 0; l < network[k][j].getNumInputs(); l++)
-            {
-                std::cout << network[k][j].getWeight(l) << " ";
-            }
-            std::cout << "]\n";
-        }
-    }
-    std::cout << std::endl;
-    
     return 0;
 }
