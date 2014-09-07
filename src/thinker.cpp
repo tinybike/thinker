@@ -188,7 +188,8 @@ void NeuralNetwork::test(const synapse& input_grid, const synapse& output_grid)
     print_layers();
 }
 
-void NeuralNetwork::print_layers() const {
+void NeuralNetwork::print_layers() const
+{
     DEBUG("\nInputs [%d nodes]: ", n_inputs);
     print(input_layer);
     DEBUG("Hidden [%d nodes]: ", n_hidden);
@@ -198,7 +199,8 @@ void NeuralNetwork::print_layers() const {
     DEBUG("\n");
 }
 
-void NeuralNetwork::print_weights() const {
+void NeuralNetwork::print_weights() const
+{
     DEBUG("\nInput-to-hidden weights:");
     print(input_weights);
     DEBUG("\nHidden-to-output weights:");
@@ -209,14 +211,16 @@ void NeuralNetwork::print_weights() const {
     print(output_back);
 }
 
-void NeuralNetwork::print(const nerve& n) const {
+void NeuralNetwork::print(const nerve& n) const
+{
     for (unsigned i = 0; i < n.size(); i++) {
         DEBUG("%f ", n[i]);
     }
     DEBUG("\n");
 }
 
-void NeuralNetwork::print(const synapse& s) const {
+void NeuralNetwork::print(const synapse& s) const
+{
     for (unsigned i = 0; i < s.size(); i++) {
         for (unsigned j = 0; j < s[i].size(); j++) {
             DEBUG("%f ", s[i][j]);
@@ -226,7 +230,7 @@ void NeuralNetwork::print(const synapse& s) const {
     DEBUG("\n");
 }
 
-double logistic(const double x)
+double NeuralNetwork::logistic(const double x) const
 {
     return rzero(1.0 / (1.0 + exp(-x)));
 }
