@@ -56,10 +56,10 @@ public:
     void print(const synapse&) const;
 };
 
-/** Round negligibly small values to zero */
+/** Logistic transfer function */
 double logistic(const double);
 
-/** Logistic transfer function */
+/** Round negligibly small values to zero */
 double rzero(const double);
 
 } // namespace

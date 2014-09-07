@@ -226,17 +226,17 @@ void NeuralNetwork::print(const synapse& s) const {
     DEBUG("\n");
 }
 
-double rzero(double x)
+double logistic(const double x)
+{
+    return rzero(1.0 / (1.0 + exp(-x)));
+}
+
+double rzero(const double x)
 {
     if (x < EPSILON && x > -EPSILON) {
         return 0.0;
     }
     return x;
-}
-
-double logistic(double x)
-{
-    return rzero(1.0 / (1.0 + exp(-x)));
 }
 
 } // namespace
