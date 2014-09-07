@@ -144,6 +144,11 @@ double NeuralNetwork::backpropagate(const nerve& target,
     return RMSE / n_outputs;
 }
 
+inline double NeuralNetwork::logistic(const double x) const
+{
+    return rzero(1.0 / (1.0 + exp(-x)));
+}
+
 void NeuralNetwork::train(const synapse& input_grid,
                           const synapse& output_grid,
                           const int num_iterations,
@@ -228,11 +233,6 @@ void NeuralNetwork::print(const synapse& s) const
         DEBUG("\n");
     }
     DEBUG("\n");
-}
-
-double NeuralNetwork::logistic(const double x) const
-{
-    return rzero(1.0 / (1.0 + exp(-x)));
 }
 
 double rzero(const double x)

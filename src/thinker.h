@@ -45,8 +45,8 @@ public:
     nerve feedforward(const nerve& pattern);
     /** Reverse pass: neural net is trained on the target pattern. */
     double backpropagate(const nerve& target, const double learning_rate);
-    /** Logistic transfer function */
-    double logistic(const double) const;
+    /** Logistic transfer function. */
+    inline double logistic(const double) const;
     /** Train the neural net to map input_grid to output_grid. */
     void train(const synapse& input_grid, const synapse& output_grid,
                const int num_iterations, const double learning_rate);
