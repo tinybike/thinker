@@ -146,7 +146,7 @@ double NeuralNetwork::backpropagate(const nerve& target,
 
 inline double NeuralNetwork::logistic(const double x) const
 {
-    return rzero(1.0 / (1.0 + exp(-x)));
+    return 1.0 / (1.0 + exp(-x));
 }
 
 void NeuralNetwork::train(const synapse& input_grid,
