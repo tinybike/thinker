@@ -6,7 +6,8 @@
 namespace Thinker {
 
 void identity_matrix(NeuralNetwork& neural_network,
-                     const int n_inputs, const int n_outputs)
+                     const int n_inputs,
+                     const int n_outputs)
 {
     double node;
     synapse input_grid;
@@ -26,8 +27,8 @@ void identity_matrix(NeuralNetwork& neural_network,
     }
 
     // Set up the network structure, train it, and show test results
-    neural_network.train(input_grid, output_grid, THINKER_MAX_CYCLES, 0.5);
-    neural_network.test(input_grid, output_grid);
+    neural_network.train(input_grid, output_grid, THINKER_MAX_CYCLES);
+    neural_network.verify(input_grid, output_grid);
 }
 
 } // namespace
