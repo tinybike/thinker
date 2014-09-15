@@ -7,4 +7,4 @@ notifications:
 script: make
 after_success:
  - sudo apt-get -qq install valgrind
- - valgrind --leak-check=full --show-reachable=yes ./thinker
+ - valgrind --leak-check=full --show-reachable=yes bin/thinker

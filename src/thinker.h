@@ -6,7 +6,7 @@
 #include <cmath>
 #include <vector>
 #include <limits>
-#include "mtrand.h"
+#include "mtrand/mtrand.h"
 #include "test.h"
 
 #ifdef NDEBUG
