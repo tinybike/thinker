@@ -6,5 +6,6 @@ notifications:
   email: false
 script: make
 after_success:
- - sudo apt-get -qq install valgrind
- - valgrind --leak-check=full --show-reachable=yes bin/thinker
+  - make check
+  - sudo apt-get -qq install valgrind
+  - valgrind --leak-check=full --show-reachable=yes bin/thinker
