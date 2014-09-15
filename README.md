@@ -16,7 +16,7 @@ To install:
 
 To run:
 
-    $ ./thinker
+    $ bin/thinker
 
 To suppress logging, compile with the `-DNDEBUG` flag.
 
