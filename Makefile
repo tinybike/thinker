@@ -6,19 +6,19 @@ PREFIX?=/usr/local
 SOURCES=$(wildcard src/**/*.cpp src/**/*.h src/*.cpp src/*.h)
 OBJECTS=$(patsubst %.cpp,%.o,$(SOURCES))
 
-BIN=bin/thinker
-TARGET=build/libthinker.a
+BUILD=build/libthinker.a
+TARGET=bin/thinker
 
-all: $(TARGET) $(BIN)
+all: $(BUILD) $(TARGET)
 
 dev: CFLAGS=-g -Wall -Isrc -Wall -Wextra $(OPTFLAGS)
 dev: all
 
-$(TARGET): build $(OBJECTS)
+$(BUILD): build $(OBJECTS)
 	ar rcs $@ $(OBJECTS)
 	ranlib $@
 
-$(BIN): $(OBJECTS)
+$(TARGET): $(OBJECTS)
 	$(CC) -o $@ $(OBJECTS)
 
 build:
