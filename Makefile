@@ -1,41 +1,33 @@
-SRC_DIR = src
-INC_DIR = src/mtrand
-OBJ_DIR = build
-CC = g++
-CFLAGS = -O2 -g -Wall -I$(INC_DIR)
+CC=g++
+CFLAGS=-O2 -g -Wall -Wextra -rdynamic -Isrc $(OPTFLAGS)
+LIBS=-ldl $(OPTLIBS)
+PREFIX?=/usr/local
 
-SRC = $(SRC_DIR)/*.cpp $(SRC_DIR)/*.h $(INC_DIR)/mtrand.h
+SOURCES=$(wildcard src/**/*.cpp src/**/*.h src/*.cpp src/*.h)
+OBJECTS=$(patsubst %.cpp,%.o,$(SOURCES))
 
-all: bin/thinker
+BIN=bin/thinker
+TARGET=build/libthinker.a
+
+all: $(TARGET) $(BIN)
+
+dev: CFLAGS=-g -Wall -Isrc -Wall -Wextra $(OPTFLAGS)
+dev: all
+
+$(TARGET): build $(OBJECTS)
+	ar rcs $@ $(OBJECTS)
+	ranlib $@
+
+$(BIN): $(OBJECTS)
+	$(CC) -o $@ $(OBJECTS)
+
+build:
 	@mkdir -p build
 	@mkdir -p bin
 
-bin/thinker: $(OBJ_DIR)/thinker.o $(OBJ_DIR)/test.o $(OBJ_DIR)/mtrand.o $(OBJ_DIR)/print.o $(OBJ_DIR)/innervate.o $(OBJ_DIR)/forward.o $(OBJ_DIR)/backward.o $(OBJ_DIR)/train.o
-	$(CC) $(CFLAGS) -o $@ $(OBJ_DIR)/thinker.o $(OBJ_DIR)/test.o $(OBJ_DIR)/mtrand.o $(OBJ_DIR)/print.o $(OBJ_DIR)/innervate.o $(OBJ_DIR)/forward.o $(OBJ_DIR)/backward.o $(OBJ_DIR)/train.o
-
-$(OBJ_DIR)/mtrand.o: $(INC_DIR)/mtrand.cpp $(INC_DIR)/mtrand.h
-	$(CC) $(CFLAGS) -o $@ -c $(INC_DIR)/mtrand.cpp
-
-$(OBJ_DIR)/print.o: $(SRC)
-	$(CC) $(CFLAGS) -o $@ -c $(SRC_DIR)/print.cpp
-
-$(OBJ_DIR)/innervate.o: $(SRC)
-	$(CC) $(CFLAGS) -o $@ -c $(SRC_DIR)/innervate.cpp
-
-$(OBJ_DIR)/forward.o: $(SRC)
-	$(CC) $(CFLAGS) -o $@ -c $(SRC_DIR)/forward.cpp
-
-$(OBJ_DIR)/backward.o: $(SRC)
-	$(CC) $(CFLAGS) -o $@ -c $(SRC_DIR)/backward.cpp
-
-$(OBJ_DIR)/train.o: $(SRC)
-	$(CC) $(CFLAGS) -o $@ -c $(SRC_DIR)/train.cpp
-
-$(OBJ_DIR)/test.o: $(SRC)
-	$(CC) $(CFLAGS) -o $@ -c $(SRC_DIR)/test.cpp
-
-$(OBJ_DIR)/thinker.o: $(SRC)
-	$(CC) $(CFLAGS) -o $@ -c $(SRC_DIR)/thinker.cpp
-
 clean:
-	$(RM) bin/thinker $(OBJ_DIR)/*.o *~
+	$(RM) thinker build/*.a build/*.o src/*.o src/**/*.o *~
+
+BADS='[^_.>a-zA-Z0-9](str(n?cpy|n?cat|xfrm|n?dup|str|pbrk|tok|_)|stpn?cpy|a?sn?printf|byte_)'
+check:
+	@egrep $(BADS) $(SOURCES) || true
