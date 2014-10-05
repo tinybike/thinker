@@ -41,15 +41,9 @@ void NeuralNetwork::innervate()
 
 nerve NeuralNetwork::feedforward(const nerve& pattern)
 {
-    // Update input nodes
     update_input_nodes(pattern);
-
-    // Update hidden nodes
-    update_nodes(input_layer, hidden_layer, input_weights, n_hidden, n_inputs);
-
-    // Update output nodes
-    update_nodes(hidden_layer, output_layer, output_weights, n_outputs, n_hidden);
-
+    update_hidden_nodes();
+    update_output_nodes();
     return output_layer;
 }
 

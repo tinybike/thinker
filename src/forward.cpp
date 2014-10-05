@@ -10,20 +10,27 @@ void NeuralNetwork::update_input_nodes(const nerve& pattern)
     }
 }
 
-void NeuralNetwork::update_nodes(const nerve& sender,
-                                 nerve& receiver,
-                                 const synapse& weights,
-                                 const int n_this,
-                                 const int n_prev)
+void NeuralNetwork::update_hidden_nodes()
 {
-    // Update hidden and output nodes
     double weighted_sum;
-    for (int i = 0; i < n_this; i++) {
+    for (int i = 0; i < n_hidden; i++) {
         weighted_sum = 0.0;
-        for (int j = 0; j < n_prev; j++) {
-            weighted_sum += sender[j] * weights[j][i];
+        for (int j = 0; j < n_inputs; j++) {
+            weighted_sum += input_layer[j] * input_weights[j][i];
         }
-        receiver[i] = logistic(weighted_sum);
+        hidden_layer[i] = logistic(weighted_sum);
+    }
+}
+
+void NeuralNetwork::update_output_nodes()
+{
+    double weighted_sum;
+    for (int i = 0; i < n_outputs; i++) {
+        weighted_sum = 0.0;
+        for (int j = 0; j < n_hidden; j++) {
+            weighted_sum += hidden_layer[j] * output_weights[j][i];
+        }
+        output_layer[i] = logistic(weighted_sum);
     }
 }
 

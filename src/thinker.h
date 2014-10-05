@@ -61,12 +61,10 @@ public:
                                const int n_to);
     /** Update input nodes using the input pattern. */
     void update_input_nodes(const nerve& pattern);
-    /** Propagate changes through the hidden and output nodes. */
-    void update_nodes(const nerve& sender,
-                      nerve& receiver,
-                      const synapse& weights,
-                      const int n_this,
-                      const int n_prev);
+    /** Propagate changes through the hidden layer. */
+    void update_hidden_nodes();
+    /** Propagate changes through the output layer. */
+    void update_output_nodes();
     nerve update_output_feedback(const nerve& target);
     nerve update_hidden_feedback(const nerve& output_feedback_updated);
     void update_weights_feedback(const nerve& output_feedback_updated,

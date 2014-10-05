@@ -1,7 +1,6 @@
 CC=g++
 CFLAGS=-O2 -g -Wall -Wextra -rdynamic -Isrc $(OPTFLAGS)
 LIBS=-ldl $(OPTLIBS)
-PREFIX?=/usr/local
 
 SOURCES=$(wildcard src/**/*.cpp src/**/*.h src/*.cpp src/*.h)
 OBJECTS=$(patsubst %.cpp,%.o,$(SOURCES))
