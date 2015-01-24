@@ -1,6 +1,6 @@
 ## Thinker
 
-[![Build Status](https://travis-ci.org/tensorjack/thinker.svg?branch=master)](https://travis-ci.org/tensorjack/thinker)
+[![Build Status](https://travis-ci.org/tinybike/thinker.svg?branch=master)](https://travis-ci.org/tinybike/thinker)
 
 Thinker is an artificial neural network with a [logistic transfer function](http://en.wikipedia.org/wiki/Logistic_function#Neural_networks), which can be trained using [backpropagation](http://en.wikipedia.org/wiki/Backpropagation).
 
